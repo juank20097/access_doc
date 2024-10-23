@@ -20,31 +20,43 @@ public class Signature implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-	@Column(name = "signature_archive")
-    private byte[] signatureArchive;  // Archivo PK12 de la firma
+    @Column(name = "signature_archive", length = 15000)
+    private String signatureArchive;
+    
+	@Column(name = "signature_password")
+    private String signaturePassword;  
 
     // Constructor vacío
     public Signature() {}
 
-    // Constructor completo
-    public Signature(byte[] signatureArchive) {
-        this.signatureArchive = signatureArchive;
-    }
+	/**
+	 * @return the signatureArchive
+	 */
+	public String getSignatureArchive() {
+		return signatureArchive;
+	}
 
-    // Getters y Setters
-    public Integer getId() {
-        return id;
-    }
+	/**
+	 * @param signatureArchive the signatureArchive to set
+	 */
+	public void setSignatureArchive(String signatureArchive) {
+		this.signatureArchive = signatureArchive;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	/**
+	 * @return the signaturePassword
+	 */
+	public String getSignaturePassword() {
+		return signaturePassword;
+	}
 
-    public byte[] getSignatureArchive() {
-        return signatureArchive;
-    }
+	/**
+	 * @param signaturePassword the signaturePassword to set
+	 */
+	public void setSignaturePassword(String signaturePassword) {
+		this.signaturePassword = signaturePassword;
+	}
 
-    public void setSignatureArchive(byte[] signatureArchive) {
-        this.signatureArchive = signatureArchive;
-    }
+    
+
 }

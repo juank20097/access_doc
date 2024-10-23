@@ -1,15 +1,15 @@
 package com.project.accessDoc.services;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -28,124 +28,107 @@ import io.swagger.v3.oas.annotations.Hidden;
 @Hidden
 @Service
 public class FormService {
-    @Autowired
-    private FormRepo formRepository;
+	@Autowired
+	private FormRepo formRepository;
 
-    @Autowired
-    private PermissionRepo permissionRepository;
+	@Autowired
+	private PermissionRepo permissionRepository;
+	
+	private String DocumentName="";
 
-    public void createFormAndPermissions(Map<String, Object> jsonData) {
-        // Obtener la fecha actual
-        Date currentDate = new Date();
-        String baseDocumentName = "GRI-GTIC-P01-F02_SolicitudPermisos_" + new SimpleDateFormat("yyyy-MM-dd").format(currentDate);
-        String documentName = generateUniqueDocumentName(baseDocumentName); // Generar nombre único
+	public void createFormAndPermissions(ArrayList<Permission> listPermissions) {
+		DocumentName = "GRI-GTIC-P01-F02_SolicitudPermisos_"
+				+ new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
+		Form form = new Form();
+		form.setDate(new Date());
+		form.setName(DocumentName);
+		form.setStatus("1");
+		Form savedForm = formRepository.save(form);
 
-        // Crear el objeto Form
-        Form form = new Form();
-        form.setDate(currentDate);
-        form.setName(documentName);
-        form.setStatus("1"); // Establecer el estado como "1"
+		for (Permission permission : listPermissions) {
+			permission.setForm(savedForm);
+			permissionRepository.save(permission);
+		}
+	}
 
-        // Guardar el Form en la base de datos
-        Form savedForm = formRepository.save(form);
+	public void generateExcel(ArrayList<Permission> listPermissions) throws IOException {
+		ClassPathResource resource = new ClassPathResource("base.xlsx");
+		// Abrir el archivo Excel base
+		InputStream fileInputStream = resource.getInputStream();
+		Workbook workbook = new XSSFWorkbook(fileInputStream);
+		Sheet sheet = workbook.getSheetAt(0);
 
-        // Extraer los permisos del JSON
-        List<Map<String, Object>> permissions = (List<Map<String, Object>>) jsonData.get("permissions");
+		String date = new SimpleDateFormat("dd MMM yyyy").format(new Date());
 
-        // Crear y guardar cada Permission en la base de datos
-        for (Map<String, Object> permissionData : permissions) {
-            Permission permission = new Permission();
-            permission.setIpOrigin((String) permissionData.get("ipOrigin"));
-            permission.setDescriptionOrigin((String) permissionData.get("descriptionOrigin"));
-            permission.setAreaOrigin((String) permissionData.get("areaOrigin"));
-            permission.setIpDestination((String) permissionData.get("ipDestination"));
-            permission.setDescriptionDestination((String) permissionData.get("descriptionDestination"));
-            permission.setAreaDestination((String) permissionData.get("areaDestination"));
-            permission.setProtocol((String) permissionData.get("protocol"));
-            permission.setPorts((String) permissionData.get("ports"));
-            permission.setDuration((String) permissionData.get("duration"));
-            permission.setForm(savedForm); // Asignar el form a este permiso
+		// Escribir la fecha en la celda C3
+		Row dateRow = sheet.getRow(2); // Fila 3 (índice 2)
+		Cell dateCell = dateRow.getCell(2); // Columna C (índice 2)
+		dateCell.setCellValue(date);
 
-            // Guardar el Permission en la base de datos
-            permissionRepository.save(permission);
-        }
-    }
+		// Escribir los permisos en las filas correspondientes
+		int startRow = 41; // Comienza en la fila 42 (índice 41)
 
-    public void generateExcel(Map<String, Object> jsonData) throws IOException {
-        // Ruta del archivo base.xlsx en resources
-        ClassPathResource resource = new ClassPathResource("base.xlsx");
+		for (Permission permission : listPermissions) {
+			// Crear una nueva fila
+			Row row = sheet.createRow(startRow);
 
-        // Abrir el archivo Excel base
-        FileInputStream fileInputStream = new FileInputStream(resource.getFile());
-        Workbook workbook = new XSSFWorkbook(fileInputStream);
-        Sheet sheet = workbook.getSheetAt(0);
+			// Crear un estilo que ajuste el texto
+			CellStyle style = sheet.getWorkbook().createCellStyle();
+			style.setWrapText(true); // Habilita el ajuste de texto
+			
+			Cell cell0 = row.createCell(0);
+			cell0.setCellValue(permission.getIpOrigin());
+			cell0.setCellStyle(style);
+			
+			Cell cell1 = row.createCell(1);
+			cell1.setCellValue(permission.getDescriptionOrigin());
+			cell1.setCellStyle(style);
 
-        // Obtener la fecha actual
-        String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+			Cell cell2 = row.createCell(2);
+			cell2.setCellValue(permission.getAreaOrigin());
+			cell2.setCellStyle(style);
 
-        // Extraer los permisos del JSON
-        List<Map<String, Object>> permissions = (List<Map<String, Object>>) jsonData.get("permissions");
+			Cell cell3 = row.createCell(3);
+			cell3.setCellValue(permission.getIpDestination());
+			cell3.setCellStyle(style);
 
-        // Escribir la fecha en la celda C3
-        Row dateRow = sheet.getRow(2); // Fila 3 (índice 2)
-        Cell dateCell = dateRow.getCell(2); // Columna C (índice 2)
-        dateCell.setCellValue(date);
+			Cell cell4 = row.createCell(4);
+			cell4.setCellValue(permission.getDescriptionDestination());
+			cell4.setCellStyle(style);
 
-        // Escribir los permisos en las filas correspondientes
-        int startRow = 41; // Comienza en la fila 42 (índice 41)
+			Cell cell5 = row.createCell(5);
+			cell5.setCellValue(permission.getAreaDestination());
+			cell5.setCellStyle(style);
 
-        for (Map<String, Object> permission : permissions) {
-            // Crear una nueva fila
-            Row row = sheet.createRow(startRow);
+			Cell cell6 = row.createCell(6);
+			cell6.setCellValue(permission.getProtocol());
+			cell6.setCellStyle(style);
 
-            // Escribir los datos del permiso en las columnas de A a I
-            row.createCell(0).setCellValue((String) permission.get("ipOrigin"));
-            row.createCell(1).setCellValue((String) permission.get("descriptionOrigin"));
-            row.createCell(2).setCellValue((String) permission.get("areaOrigin"));
-            row.createCell(3).setCellValue((String) permission.get("ipDestination"));
-            row.createCell(4).setCellValue((String) permission.get("descriptionDestination"));
-            row.createCell(5).setCellValue((String) permission.get("areaDestination"));
-            row.createCell(6).setCellValue((String) permission.get("protocol"));
-            row.createCell(7).setCellValue((String) permission.get("ports"));
-            row.createCell(8).setCellValue((String) permission.get("duration"));
+			Cell cell7 = row.createCell(7);
+			cell7.setCellValue(permission.getPorts());
+			cell7.setCellStyle(style);
 
-            startRow++;
-        }
+			Cell cell8 = row.createCell(8);
+			cell8.setCellValue(permission.getDuration());
+			cell8.setCellStyle(style);
 
-        // Guardar el nuevo archivo Excel
-        String baseFileName = "GRI-GTIC-P01-F02_SolicitudPermisos_" + date;
-        String fileExtension = ".xlsx";
-        String outputFilePath = System.getProperty("user.dir") + File.separator + baseFileName + fileExtension;
+			startRow++;
+		}
 
-        // Comprobar si el archivo ya existe y modificar el nombre si es necesario
-        int counter = 1;
-        while (new File(outputFilePath).exists()) {
-            outputFilePath = System.getProperty("user.dir") + File.separator + baseFileName + "_" + counter + fileExtension;
-            counter++;
-        }
+		String outputDirectoryPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "doc";
+		String outputFilePath = outputDirectoryPath + File.separator + DocumentName + ".xlsx";
 
-        // Guardar el archivo Excel
-        FileOutputStream fileOutputStream = new FileOutputStream(new File(outputFilePath));
-        workbook.write(fileOutputStream);
-        workbook.close();
-        fileOutputStream.close();
-        fileInputStream.close();
+		File directory = new File(outputDirectoryPath);
+		if (!directory.exists()) {
+		    directory.mkdirs(); 
+		}
+		// Guardar el archivo Excel
+		FileOutputStream fileOutputStream = new FileOutputStream(new File(outputFilePath));
+		workbook.write(fileOutputStream);
+		workbook.close();
+		fileOutputStream.close();
+		fileInputStream.close();
 
-        System.out.println("Archivo Excel generado y guardado en: " + outputFilePath);
-    }
-
-    private String generateUniqueDocumentName(String baseDocumentName) {
-        String fileExtension = ".xlsx";
-        String outputFilePath = System.getProperty("user.dir") + File.separator + baseDocumentName + fileExtension;
-
-        // Comprobar si el archivo ya existe y modificar el nombre si es necesario
-        int counter = 1;
-        while (new File(outputFilePath).exists()) {
-            outputFilePath = System.getProperty("user.dir") + File.separator + baseDocumentName + "_" + counter + fileExtension;
-            counter++;
-        }
-
-        // Extraer y devolver el nombre único
-        return new File(outputFilePath).getName();
-    }
+		System.out.println("Archivo Excel generado y guardado en: " + outputFilePath);
+	}
 }
