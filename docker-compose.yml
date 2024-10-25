@@ -20,6 +20,8 @@ services:
       retries: 5
       start_period: 5s
   
+
+# Github: https://github.com/juank20097/access_doc   ///   docker build -t ws_permission:latest .  
   ws-permission-back:
     image: ws_permission
     container_name: ws-permission-back
@@ -35,6 +37,7 @@ services:
     volumes:
     - ./documentos:/app/src/main/resources/doc
 
+# Github: https://github.com/juank20097/chatbot_addPermission   ///   docker build -t chatbot_permission:latest . 
   chatbot-permission:
     image: chatbot_permission
     container_name: chatbot-permission
@@ -54,7 +57,7 @@ services:
       - POSTGRES_DB_PORT=5432
       - URL_SERVICE=ws-permission-back
     volumes:
-    - ./documentos:/app/documents
+    - ./documentos:/app/doc
 
 volumes:
   db:
