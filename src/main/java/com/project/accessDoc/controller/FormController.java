@@ -31,15 +31,16 @@ public class FormController {
 			@ApiResponse(responseCode = "400", description = "Bad request", content = @Content()),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"error\": \"Error al generar el archivo Excel: mensaje del error\"}"))) })
 	@CrossOrigin(origins = "*")
-	@PostMapping("/excel")
-	public ResponseEntity<Map<String, String>> generateForm(@RequestBody ArrayList<Permission> permissions) {
+	@PostMapping("/excel/{dni}/{name}")
+	public ResponseEntity<Map<String, String>> generateForm(@PathVariable("dni") String dni,@PathVariable("name") String name,@RequestBody ArrayList<Permission> permissions) {
 		Map<String, String> response = new HashMap<>();
 		try {
 			// Primero, guardar el form y los permisos en la base de datos
-			formService.createFormAndPermissions(permissions);
+			String DocumentName=formService.createFormAndPermissions(name,dni,permissions);
 			// Después, generar el Excel
-			formService.generateExcel(permissions);
+			formService.generateExcel(name,dni,permissions);
 			response.put("message", "El archivo Excel ha sido generado exitosamente.");
+			response.put("document", DocumentName+".xlsx");
 			return ResponseEntity.ok(response);
 		} catch (IOException e) {
 			response.put("error", "Error al generar el archivo Excel: " + e.getMessage());

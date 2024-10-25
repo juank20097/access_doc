@@ -36,12 +36,14 @@ public class FormService {
 	
 	private String DocumentName="";
 
-	public void createFormAndPermissions(ArrayList<Permission> listPermissions) {
+	public String createFormAndPermissions(String name, String dni,ArrayList<Permission> listPermissions) {
 		DocumentName = "GRI-GTIC-P01-F02_SolicitudPermisos_"
 				+ new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
 		Form form = new Form();
 		form.setDate(new Date());
 		form.setName(DocumentName);
+		form.setOwner(name);
+		form.setDni(dni);
 		form.setStatus("1");
 		Form savedForm = formRepository.save(form);
 
@@ -49,9 +51,10 @@ public class FormService {
 			permission.setForm(savedForm);
 			permissionRepository.save(permission);
 		}
+		return DocumentName;
 	}
 
-	public void generateExcel(ArrayList<Permission> listPermissions) throws IOException {
+	public void generateExcel(String name, String dni,ArrayList<Permission> listPermissions) throws IOException {
 		ClassPathResource resource = new ClassPathResource("base.xlsx");
 		// Abrir el archivo Excel base
 		InputStream fileInputStream = resource.getInputStream();
@@ -64,6 +67,14 @@ public class FormService {
 		Row dateRow = sheet.getRow(2); // Fila 3 (índice 2)
 		Cell dateCell = dateRow.getCell(2); // Columna C (índice 2)
 		dateCell.setCellValue(date);
+		
+		Row dateRowN = sheet.getRow(12); // Fila 13 (índice 12)
+		Cell dateCellN = dateRowN.getCell(2); // Columna C (índice 2)
+		dateCellN.setCellValue(name.toUpperCase());
+		
+		Row dateRowDni = sheet.getRow(13); // Fila 13 (índice 13)
+		Cell dateCellDni = dateRowDni.getCell(2); // Columna C (índice 2)
+		dateCellDni.setCellValue(dni);
 
 		// Escribir los permisos en las filas correspondientes
 		int startRow = 41; // Comienza en la fila 42 (índice 41)

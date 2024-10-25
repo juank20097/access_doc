@@ -31,25 +31,19 @@ public class Form implements Serializable {
 
 	@Column(name = "name")
 	private String name; // Nombre del archivo PDF
-
+	
+	@Column(name = "owner")
+	private String owner;
+	
+	@Column(name = "dni")
+	private String dni;
+	
 	@ManyToOne
 	@JoinColumn(name = "signature_id") // Clave foránea a la tabla Signature
 	private Signature signature;
 
 	@Column(name = "status")
 	private String status; // Indica si está cerrado o no
-
-	// Constructor vacío
-	public Form() {
-	}
-
-	// Constructor completo
-	public Form(Date date, String name, Signature signature, String status) {
-		this.date = date;
-		this.name = name;
-		this.signature = signature;
-		this.status = status;
-	}
 
 	// Getters y Setters
 	public Integer getId() {
@@ -91,4 +85,34 @@ public class Form implements Serializable {
 	public void setStatus(String status) {
 		this.status = status;
 	}
+
+	/**
+	 * @return the owner
+	 */
+	public String getOwner() {
+		return owner;
+	}
+
+	/**
+	 * @param owner the owner to set
+	 */
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
+
+	/**
+	 * @return the dni
+	 */
+	public String getDni() {
+		return dni;
+	}
+
+	/**
+	 * @param dni the dni to set
+	 */
+	public void setDni(String dni) {
+		this.dni = dni;
+	}
+	
+	
 }
